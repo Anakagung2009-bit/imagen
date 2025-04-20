@@ -28,7 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentUser } from "@/lib/authUtils";
 import { useRef } from "react";
 
-export default function LandingPage() {
+export default function HomePage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const user = useCurrentUser();
   
