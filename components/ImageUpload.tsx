@@ -3,7 +3,11 @@
 import { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "./ui/button";
-import { Upload as UploadIcon, Image as ImageIcon, X } from "lucide-react";
+import { Upload, ImageIcon, X, FileImage } from "lucide-react";
+import { Separator } from "./ui/separator";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent } from "./ui/card";
 
 interface ImageUploadProps {
   onImageSelect: (imageData: string) => void;
@@ -81,63 +85,99 @@ export function ImageUpload({ onImageSelect, currentImage, onError }: ImageUploa
 
   return (
     <div className="w-full">
-      {!currentImage ? (
-        <div
-          {...getRootProps()}
-          className={`min-h-[150px] p-4 rounded-lg
-          ${isDragActive ? "bg-secondary/50" : "bg-secondary"}
-          ${isLoading ? "opacity-50 cursor-wait" : ""}
-          transition-colors duration-200 ease-in-out hover:bg-secondary/50
-          border-2 border-dashed border-secondary
-          cursor-pointer flex items-center justify-center gap-4
-        `}
-        >
-          <input {...getInputProps()} />
-          <div className="flex flex-row items-center" role="presentation">
-            <UploadIcon className="w-8 h-8 text-primary mr-3 flex-shrink-0" aria-hidden="true" />
-            <div className="">
-              <p className="text-sm font-medium text-foreground">
-                Drop your image here or click to browse
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Maximum file size: 10MB
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center p-4 rounded-lg bg-secondary">
-          <div className="flex w-full items-center mb-4">
-            <ImageIcon className="w-8 h-8 text-primary mr-3 flex-shrink-0" aria-hidden="true" />
-            <div className="flex-grow min-w-0">
-              <p className="text-sm font-medium truncate text-foreground">
-                {selectedFile?.name || "Current Image"}
-              </p>
-              {selectedFile && (
+      <AnimatePresence mode="wait">
+        {!currentImage ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="border-dashed border-2 hover:border-primary/50 transition-colors">
+              <div
+                {...getRootProps()}
+                className={cn(
+                  "relative py-12 flex flex-col items-center justify-center rounded-lg",
+                  "transition-all duration-200 ease-in-out",
+                  "cursor-pointer",
+                  isDragActive && "bg-primary/5",
+                  isLoading && "opacity-50 cursor-wait"
+                )}
+              >
+                <input {...getInputProps()} />
+                
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <Upload className="w-10 h-10 text-primary/70" />
+                </div>
+                
+                <h3 className="text-xl font-medium mb-2">Drop your image here</h3>
+                <p className="text-sm text-muted-foreground mb-4">or click to browse your files</p>
+                
+                <Separator className="w-24 mb-4" />
+                
                 <p className="text-xs text-muted-foreground">
-                  {formatFileSize(selectedFile?.size ?? 0)}
+                  Supports: JPG, PNG (Max: 10MB)
                 </p>
-              )}
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleRemove}
-              className="flex-shrink-0 ml-2"
-            >
-              <X className="w-4 h-4" />
-              <span className="sr-only">Remove image</span>
-            </Button>
-          </div>
-          <div className="w-full overflow-hidden rounded-md">
-            <img
-              src={currentImage}
-              alt="Selected"
-              className="w-full h-auto object-contain"
-            />
-          </div>
-        </div>
-      )}
+              </div>
+            </Card>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-4 bg-muted/30 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <ImageIcon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">
+                        {selectedFile?.name || "Selected Image"}
+                      </p>
+                      {selectedFile && (
+                        <p className="text-xs text-muted-foreground">
+                          {formatFileSize(selectedFile?.size ?? 0)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleRemove}
+                    className="rounded-full hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+                
+                <div className="relative aspect-video">
+                  <img
+                    src={currentImage}
+                    alt="Selected"
+                    className="w-full h-full object-contain"
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button
+                      variant="secondary"
+                      onClick={handleRemove}
+                      className="bg-white/20 backdrop-blur-sm hover:bg-white/30"
+                    >
+                      Choose Different Image
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

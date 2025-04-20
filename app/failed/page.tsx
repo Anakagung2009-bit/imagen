@@ -1,0 +1,8 @@
+export default function FailedPage() {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-3xl font-bold text-green-600">Payment Failed!</h1>
+      </div>
+    );
+  }
+  

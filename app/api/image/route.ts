@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
           topP: 0.95,
           topK: 40,
           responseModalities: ["Text", "Image"],
-        },
+        }        
       });
     } catch (error) {
       console.error("Error in chat.sendMessage:", error);
@@ -129,12 +129,13 @@ export async function POST(req: NextRequest) {
     let textResponse = null;
     let imageData = null;
     let mimeType = "image/png";
+    let imageKitUrl = null;
 
     // Process the response
     if (response.candidates && response.candidates.length > 0) {
       const parts = response.candidates[0].content.parts;
       console.log("Number of parts in response:", parts.length);
-
+    
       for (const part of parts) {
         if ("inlineData" in part && part.inlineData) {
           // Get the image data
@@ -155,7 +156,30 @@ export async function POST(req: NextRequest) {
           );
         }
       }
-    }
+      if (imageData) {
+        try {
+          const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/upload-image`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              file: `data:${mimeType};base64,${imageData}`,
+              fileName: `gemini-image-${Date.now()}.png`,
+            }),
+          });
+      
+          const uploadResult = await uploadResponse.json();
+          imageKitUrl = uploadResult.url;
+          console.log("Image uploaded to ImageKit:", imageKitUrl);
+        } catch (uploadErr) {
+          console.error("Failed to upload image to ImageKit:", uploadErr);
+        }
+      }
+
+    } else {
+      console.log("No candidates found in the API response");
+    }    
 
     // Return just the base64 image and description as JSON
     return NextResponse.json({
