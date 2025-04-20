@@ -16,18 +16,11 @@ import { Sparkles, Check, Loader2, CreditCard } from "lucide-react";
 import { onAuthStateChanged, getAuth, User } from "firebase/auth";
 import app from "@/lib/firebase";
 import { motion } from "framer-motion";
+import { useCurrentUser } from "@/lib/useCurrentUser";
 
-export function useCurrentUser() {
-  const [user, setUser] = useState<User | null>(null);
+// dan gunakan seperti biasa di dalam komponen page
 
-  useEffect(() => {
-    const auth = getAuth(app);
-    const unsubscribe = onAuthStateChanged(auth, setUser);
-    return () => unsubscribe();
-  }, []);
 
-  return user;
-}
 
 export default function Plans() {
   const [loading, setLoading] = useState(false);
