@@ -18,9 +18,6 @@ import app from "@/lib/firebase";
 import { motion } from "framer-motion";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 
-// dan gunakan seperti biasa di dalam komponen page
-
-
 
 export default function Plans() {
   const [loading, setLoading] = useState(false);
@@ -94,7 +91,7 @@ export default function Plans() {
 
   useEffect(() => {
     const script = document.createElement("script");
-    script.src = "https://app.sandbox.midtrans.com/snap/snap.js";
+    script.src = process.env.NEXT_PUBLIC_MIDTRANS_SNAP_URL as string;
     script.setAttribute("data-client-key", process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY!);
     script.async = true;
     document.body.appendChild(script);
