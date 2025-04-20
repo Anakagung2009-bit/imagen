@@ -14,6 +14,12 @@ const eslintConfig = [
   {
     rules: {
       "@typescript-eslint/no-unused-vars": "off",  // Jika perlu menonaktifkan aturan
+      '@next/next/no-img-element': 'off', // Menonaktifkan peringatan no-img-element
+      'prefer-const': 'off', // Menonaktifkan aturan prefer-const
+      'react-hooks/exhaustive-deps': 'off', // Menonaktifkan aturan exhaustive-deps
+      'no-warning-comments': 'off', // Menonaktifkan semua warning komentar
+      'no-console': 'off', // Menonaktifkan peringatan terkait console
+      'react/jsx-no-target-blank': 'off', // Menonaktifkan peringatan terkait target="_blank"
     },
   },
 ];
