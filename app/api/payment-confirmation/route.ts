@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { order_id, plan, user_id } = body;
+  const {plan, user_id } = body;
 
   const creditsToAdd =
     plan === "Basic" ? 2000 : plan === "Pro" ? 5000 : Infinity;

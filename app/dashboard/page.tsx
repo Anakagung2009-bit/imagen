@@ -18,10 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   LayoutDashboard, 
   ImageIcon, 
-  Settings, 
   Zap, 
   History, 
-  User, 
   CreditCard 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

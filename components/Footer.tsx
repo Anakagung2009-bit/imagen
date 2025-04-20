@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles, Wand2 } from "lucide-react";
+import { Wand2 } from "lucide-react";
 
 export function Footer() {
   return (

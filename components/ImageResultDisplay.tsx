@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Download, RotateCcw, MessageCircle, X, ZoomIn } from "lucide-react";
+import { Download, RotateCcw, X, ZoomIn } from "lucide-react";
 import { HistoryItem, HistoryPart } from "@/lib/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
-import * as Tooltip from "@radix-ui/react-tooltip";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";

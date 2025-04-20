@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+const _nextConfig: NextConfig = {
   output: "standalone",
   experimental: {
     turbo: {
@@ -11,4 +11,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default _nextConfig;
