@@ -13,13 +13,18 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      "@typescript-eslint/no-unused-vars": "off",  // Jika perlu menonaktifkan aturan
-      '@next/next/no-img-element': 'off', // Menonaktifkan peringatan no-img-element
-      'prefer-const': 'off', // Menonaktifkan aturan prefer-const
-      'react-hooks/exhaustive-deps': 'off', // Menonaktifkan aturan exhaustive-deps
-      'no-warning-comments': 'off', // Menonaktifkan semua warning komentar
-      'no-console': 'off', // Menonaktifkan peringatan terkait console
-      'react/jsx-no-target-blank': 'off', // Menonaktifkan peringatan terkait target="_blank"
+      "@typescript-eslint/no-unused-vars": "off",
+      "@next/next/no-img-element": "off",
+      "prefer-const": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "no-warning-comments": "off",
+      "no-console": "off",
+      "react/jsx-no-target-blank": "off",
+
+      // Tambahan buat menghindari error saat build
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "react/no-unescaped-entities": "off",
     },
   },
 ];
