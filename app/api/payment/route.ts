@@ -6,7 +6,7 @@ export async function POST(req: Request) {
 
   const snap = new midtransClient.Snap({
     isProduction: false,
-    serverKey: process.env.MIDTRANS_SERVER_KEY!,
+    serverKey: process.env.MIDTRANS_SERVER_KEY,
   });
 
   const transactionDetails = {
