@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 const planDetails = {
     Basic: { name: 'Basic', credits: 1000, priceIDR: 'Rp 50.000', priceUSD: 'USD 5.00' },
     Pro: { name: 'Pro', credits: 5000, priceIDR: 'Rp 100.000', priceUSD: 'USD 10.00' },
-    Ultimate: { name: 'Ultimate', credits: 20000, priceIDR: 'Rp 400.000', priceUSD: 'USD 40.00' },
+    Ultimate: { name: 'Ultimate', credits: Infinity, priceIDR: 'Rp 400.000', priceUSD: 'USD 40.00' },
 };
 
 
