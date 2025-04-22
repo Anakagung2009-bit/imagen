@@ -117,7 +117,7 @@ export default function CheckoutPage() {
       
           if (data.token) {
             // Handle Midtrans payment
-            window.snap.pay(data.token, {
+            (window as any).snap.pay(data.token, {
               onSuccess: async (result) => {
                 await confirmPayment(result.order_id);
               },
