@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation"; // Ganti useRouter dengan useSearchParams
 import { motion } from "framer-motion";
 import { CheckCircle, ArrowRight, CreditCard, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,38 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import confetti from "canvas-confetti";
+import { getAuth } from 'firebase/auth';
+
 
 export default function SuccessPage() {
   const router = useRouter();
   const [progress, setProgress] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
+  const searchParams = useSearchParams();
+  const order_id = searchParams.get("order_id");
+  const transaction_status = searchParams.get("transaction_status");
+  const plan = searchParams.get('plan'); // harus dikirim dari awal saat ke PayPal
+  const user = getAuth().currentUser;
+
+
+  useEffect(() => {
+    const confirm = async () => {
+      if (!user || !plan) return;
+
+      await fetch('/api/payment-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.uid,
+          plan,
+          order_id: searchParams.get('paymentId') || 'paypal-' + Date.now(),
+        }),
+      });
+    };
+
+    confirm();
+  }, [user, plan]);
+  
 
   useEffect(() => {
     // Trigger confetti effect
@@ -70,11 +97,12 @@ export default function SuccessPage() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              <h1 className="text-2xl font-bold text-green-700 dark:text-green-400">Payment Successful!</h1>
-              <p className="text-muted-foreground mt-1">Your transaction has been processed</p>
+              <p className="text -muted-foreground mt-1">
+                {transaction_status === "completed" ? "Your transaction has been processed." : "Your payment is currently pending. Please check back later."}
+              </p>
             </motion.div>
           </CardHeader>
-          
+  
           <CardContent className="pt-6 pb-4 space-y-6">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
@@ -83,44 +111,45 @@ export default function SuccessPage() {
               </div>
               <Progress value={progress} className="h-2" />
             </div>
-            
+  
             <div className="bg-muted/40 rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Status</span>
-                <Badge variant="outline" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800">
-                  Completed
+                <Badge variant="outline" className={`bg-${transaction_status === "completed" ? "green" : "yellow"}-100 text-${transaction_status === "completed" ? "green" : "yellow"}-700`}>
+                  {transaction_status === "completed" ? "Completed" : "Pending"}
                 </Badge>
               </div>
-        
-              
-              {/* <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Transaction ID</span>
-                <span className="text-xs text-muted-foreground font-mono">TXN-{Math.random().toString(36).substring(2, 10).toUpperCase()}</span>
-              </div> */}
+  
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Order ID</span>
+                <span className="font-mono">{order_id}</span>
+              </div>
             </div>
-            
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: showConfetti ? 1 : 0 }}
-              transition={{ delay: 0.8 }}
-              className="text-center"
-            >
-              <p className="text-sm text-muted-foreground">
-                Your account has been credited and you can now generate more amazing AI images!
-              </p>
-            </motion.div>
+  
+            {transaction_status === "pending" && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="text-center"
+              >
+                <p className="text-sm text-muted-foreground">
+                  Your payment is pending. Credits will be added once the payment is confirmed.
+                </p>
+              </motion.div>
+            )}
           </CardContent>
-          
+  
           <CardFooter className="flex flex-col sm:flex-row gap-3 pt-2 pb-6">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full sm:w-1/2"
               onClick={() => router.push("/")}
             >
               <Home className="mr-2 h-4 w-4" />
               Home
             </Button>
-            <Button 
+            <Button
               className="w-full sm:w-1/2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
               onClick={() => router.push("/dashboard")}
             >
@@ -134,4 +163,3 @@ export default function SuccessPage() {
     </div>
   );
 }
-  

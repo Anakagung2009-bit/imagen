@@ -24,70 +24,79 @@ export default function Plans() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const router = useRouter();
   const user = useCurrentUser();
-
-  const handleBuyPlan = async (plan: string) => {
-    setLoading(true); // Start loading
-
-    try {
-      const response = await fetch("/api/payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
-
-      const data = await response.json();
-
-      if (data.token) {
-        // @ts-ignore
-        window.snap.pay(data.token, {
-          onSuccess: async function (result: any) {
-            console.log("Payment success:", result);
-
-            // Kirim ke backend buat update credits
-            const paymentConfirmationResponse = await fetch("/api/payment-confirmation", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                order_id: result.order_id,
-                plan,
-                user_id: user?.uid, // pastikan UID user benar
-              }),
-            });
-
-            const paymentConfirmationData = await paymentConfirmationResponse.json();
-            console.log("Payment Confirmation Response:", paymentConfirmationData);
-
-            if (paymentConfirmationData.message === "Credits updated successfully") {
-              router.push("/success");
-            } else {
-              router.push("/failed");
-            }
-
-            setLoading(false);
-          },
-          onPending: function (result: any) {
-            console.log("Payment pending:", result);
-            router.push("/pending");
-            setLoading(false);
-          },
-          onError: function (result: any) {
-            console.log("Payment failed:", result);
-            router.push("/failed");
-            setLoading(false);
-          },
-          onClose: function () {
-            console.log("Payment popup closed");
-            setLoading(false);
-          },
-        });
-      } else {
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error("Payment Error:", error);
-      setLoading(false);
-    }
+  const [selectedCountry, setSelectedCountry] = useState('ID'); // Default to Indonesia
+  const getPrice = (plan) => {
+    return selectedCountry === 'US' ? plans.find(p => p.name === plan).priceUSD : plans.find(p => p.name === plan).priceIDR;
   };
+
+  const handleBuyPlan = (plan: string) => {
+    router.push(`/checkout?plan=${plan}&country=${selectedCountry}`); // Pass the selected country
+  };
+  
+
+  // const handleBuyPlan = async (plan: string) => {
+  //   setLoading(true); // Start loading
+
+  //   try {
+  //     const response = await fetch("/api/payment", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ plan }),
+  //     });
+
+  //     const data = await response.json();
+
+  //     if (data.token) {
+  //       // @ts-ignore
+  //       window.snap.pay(data.token, {
+  //         onSuccess: async function (result: any) {
+  //           console.log("Payment success:", result);
+
+  //           // Kirim ke backend buat update credits
+  //           const paymentConfirmationResponse = await fetch("/api/payment-confirmation", {
+  //             method: "POST",
+  //             headers: { "Content-Type": "application/json" },
+  //             body: JSON.stringify({
+  //               order_id: result.order_id,
+  //               plan,
+  //               user_id: user?.uid, // pastikan UID user benar
+  //             }),
+  //           });
+
+  //           const paymentConfirmationData = await paymentConfirmationResponse.json();
+  //           console.log("Payment Confirmation Response:", paymentConfirmationData);
+
+  //           if (paymentConfirmationData.message === "Credits updated successfully") {
+  //             router.push("/success");
+  //           } else {
+  //             router.push("/failed");
+  //           }
+
+  //           setLoading(false);
+  //         },
+  //         onPending: function (result: any) {
+  //           console.log("Payment pending:", result);
+  //           router.push("/pending");
+  //           setLoading(false);
+  //         },
+  //         onError: function (result: any) {
+  //           console.log("Payment failed:", result);
+  //           router.push("/failed");
+  //           setLoading(false);
+  //         },
+  //         onClose: function () {
+  //           console.log("Payment popup closed");
+  //           setLoading(false);
+  //         },
+  //       });
+  //     } else {
+  //       setLoading(false);
+  //     }
+  //   } catch (error) {
+  //     console.error("Payment Error:", error);
+  //     setLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -105,7 +114,8 @@ export default function Plans() {
       name: "Basic",
       description: "Perfect for beginners",
       credits: "2,000 Credits",
-      price: "IDR 50,000",
+      priceIDR: "IDR 50,000",
+      priceUSD: "USD 5.00",
       features: ["HD Downloads"],
       popular: false,
       color: "bg-gradient-to-br from-blue-500/20 to-blue-600/20",
@@ -116,7 +126,8 @@ export default function Plans() {
       name: "Pro",
       description: "For serious creators",
       credits: "5,000 Credits",
-      price: "IDR 100,000",
+      priceIDR: "IDR 100,000",
+      priceUSD: "USD 10.00",
       features: ["HD downloads"],
       popular: true,
       color: "bg-gradient-to-br from-purple-500/20 to-purple-600/20",
@@ -127,7 +138,8 @@ export default function Plans() {
       name: "Ultimate",
       description: "For professionals",
       credits: "Unlimited Credits",
-      price: "IDR 400,000",
+      priceIDR: "IDR 400,000",
+      priceUSD: "USD 40.00",
       features: ["Unlimited image generation", "HD Downloads"],
       popular: false,
       color: "bg-gradient-to-br from-amber-500/20 to-amber-600/20",
@@ -135,6 +147,7 @@ export default function Plans() {
       borderColor: "border-amber-200",
     },
   ];
+  
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen  p-6">
@@ -144,6 +157,10 @@ export default function Plans() {
           <p className="text-muted-foreground max-w-xl mx-auto">
             Unlock your creative potential with our flexible pricing plans. Choose the perfect option for your needs.
           </p>
+          <select onChange={(e) => setSelectedCountry(e.target.value)} value={selectedCountry}>
+      <option value="ID">Indonesia</option>
+      <option value="US">International</option>
+    </select>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
@@ -171,7 +188,7 @@ export default function Plans() {
                   <CardTitle className={`text-2xl font-bold ${plan.textColor}`}>{plan.name}</CardTitle>
                   <CardDescription className="text-foreground/70">{plan.description}</CardDescription>
                   <div className="mt-4">
-                    <span className="text-4xl font-bold">{plan.price}</span>
+                    <span className="text-4xl font-bold">{getPrice(plan.name)}</span>
                     <span className="text-muted-foreground ml-2"></span>
                   </div>
                   <div className="mt-2 font-medium">
