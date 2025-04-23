@@ -12,7 +12,9 @@ import {
   PenTool, 
   Check, 
   ArrowRight, 
-  ChevronRight 
+  ChevronRight,
+  BrainCircuit,
+  Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,6 +75,11 @@ export default function HomePage() {
       icon: <Zap className="h-6 w-6" />,
       title: "Fast Processing",
       description: "Get your AI-generated images in seconds with our optimized processing."
+    },
+    {
+      icon: <BrainCircuit className="h-6 w-6" />,
+      title: "Multiple AI Models",
+      description: "Choose between Google DeepMind and DALL-E 3 for different generation styles."
     }
   ];
 

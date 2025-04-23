@@ -12,7 +12,8 @@ import {
   CardContent, 
   CardDescription, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardFooter
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -20,7 +21,12 @@ import {
   ImageIcon, 
   Zap, 
   History, 
-  CreditCard 
+  CreditCard,
+  ChevronRight,
+  Calendar,
+  BarChart3,
+  Sparkles,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -28,6 +34,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   const user = useCurrentUser();
@@ -91,13 +98,16 @@ export default function Dashboard() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen to-muted/20 p-4">
-        <Card className="w-full max-w-md border shadow-lg">
-          <CardHeader className="text-center">
+        <Card className="w-full max-w-md border shadow-lg backdrop-blur-sm bg-card/80">
+          <CardHeader className="text-center space-y-2">
+            <div className="mx-auto rounded-full bg-primary/10 p-3 w-fit">
+              <LayoutDashboard className="h-6 w-6 text-primary" />
+            </div>
             <CardTitle className="text-2xl font-bold">Access Required</CardTitle>
             <CardDescription>Please sign in to view your dashboard</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center pb-6">
-            <Button variant="default" size="lg" asChild>
+            <Button variant="default" size="lg" className="w-full sm:w-auto px-8 font-medium" asChild>
               <a href="/signin">Sign In</a>
             </Button>
           </CardContent>
@@ -107,116 +117,165 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen to-muted/20 pb-10">
+    <div className="min-h-screen bg-gradient-to-b  to-muted/10 pb-10">
       <div className="container mx-auto px-4 py-8">
         {/* Dashboard Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 border-4 border-primary/10">
-                <AvatarImage src={user.photoURL || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                  {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-primary/20 to-primary/40 blur-sm"></div>
+                <Avatar className="h-16 w-16 border-2 border-background relative">
+                  <AvatarImage src={user.photoURL || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                    {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
               <div>
-                <h1 className="text-3xl font-bold">Welcome, {user.displayName || user.email?.split('@')[0]}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Welcome, {user.displayName || user.email?.split('@')[0]}</h1>
                 <p className="text-muted-foreground">Manage your AI image generation dashboard</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="px-3 py-1 gap-1 text-sm border-primary/20 bg-primary/5">
+            <div className="flex flex-wrap items-center gap-3 mt-2 md:mt-0">
+              <Badge variant="outline" className="px-3 py-1.5 gap-1.5 text-sm border-primary/20 bg-primary/5 rounded-full">
                 <Zap className="h-4 w-4 text-primary" />
                 <span className="font-semibold">{userCredits}</span> credits
               </Badge>
               <Link href="/plans" passHref>
-              <Button asChild variant="default" size="sm">
-                <span>
+                <Button className="rounded-full shadow-md bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300" size="sm">
                   <CreditCard className="h-4 w-4 mr-2" />
                   Buy Credits
-                </span>
-              </Button>
-            </Link>
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
 
         {/* Dashboard Tabs */}
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="bg-card rounded-lg shadow-sm border p-1">
-            <TabsList className="grid grid-cols-3 md:grid-cols-5 h-14">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+          <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-sm border p-1.5">
+            <TabsList className="grid grid-cols-3 md:grid-cols-5 h-14 bg-muted/50 rounded-lg">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-md transition-all">
                 <LayoutDashboard className="h-4 w-4 mr-2" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="gallery" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+              <TabsTrigger value="gallery" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-md transition-all">
                 <ImageIcon className="h-4 w-4 mr-2" />
                 Gallery
               </TabsTrigger>
-              <TabsTrigger value="history" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+              <TabsTrigger value="history" className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-md transition-all">
                 <History className="h-4 w-4 mr-2" />
                 History
               </TabsTrigger>
-              {/* <TabsTrigger value="profile" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-                <User className="h-4 w-4 mr-2" />
-                Profile
-              </TabsTrigger> */}
-              {/* <TabsTrigger value="settings" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </TabsTrigger> */}
             </TabsList>
           </div>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Images</CardTitle>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              <Card className="overflow-hidden border bg-card/80 backdrop-blur-sm hover:shadow-md transition-all duration-300">
+                <CardHeader className="pb-2 border-b border-border/40">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4 text-primary" />
+                      Total Images
+                    </CardTitle>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-xs">
+                      All time
+                    </Badge>
+                  </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
                   <div className="text-3xl font-bold">{stats.totalImages}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stats.thisMonth} this month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Credits Used</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{stats.creditsUsed}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {userCredits} remaining
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Credit Usage</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{Math.round((stats.creditsUsed / (stats.creditsUsed + userCredits)) * 100)}%</div>
-                  <div className="mt-2">
-                    <Progress value={(stats.creditsUsed / (stats.creditsUsed + userCredits)) * 100} className="h-2" />
+                  <div className="flex items-center gap-2 mt-1">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">
+                      {stats.thisMonth} this month
+                    </p>
                   </div>
                 </CardContent>
+                <div className="h-1 w-full bg-gradient-to-r from-primary/40 to-primary/10"></div>
+              </Card>
+              
+              <Card className="overflow-hidden border bg-card/80 backdrop-blur-sm hover:shadow-md transition-all duration-300">
+                <CardHeader className="pb-2 border-b border-border/40">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      Credits Used
+                    </CardTitle>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-xs">
+                      10 per image
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="text-3xl font-bold">{stats.creditsUsed}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Zap className="h-3.5 w-3.5 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">
+                      {userCredits} remaining
+                    </p>
+                  </div>
+                </CardContent>
+                <div className="h-1 w-full bg-gradient-to-r from-primary/40 to-primary/10"></div>
+              </Card>
+              
+              <Card className="overflow-hidden border bg-card/80 backdrop-blur-sm hover:shadow-md transition-all duration-300">
+                <CardHeader className="pb-2 border-b border-border/40">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                      Credit Usage
+                    </CardTitle>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-xs">
+                      {Math.round((stats.creditsUsed / (stats.creditsUsed + userCredits || 1)) * 100)}%
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="text-3xl font-bold">{Math.round((stats.creditsUsed / (stats.creditsUsed + userCredits || 1)) * 100)}%</div>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex justify-between items-center text-xs text-muted-foreground">
+                      <span>0</span>
+                      <span>Used vs. Available</span>
+                      <span>100%</span>
+                    </div>
+                    <Progress 
+                      value={(stats.creditsUsed / (stats.creditsUsed + userCredits || 1)) * 100} 
+                      className="h-2 rounded-full" 
+                    />
+                  </div>
+                </CardContent>
+                <div className="h-1 w-full bg-gradient-to-r from-primary/40 to-primary/10"></div>
               </Card>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Creations</CardTitle>
-                <CardDescription>Your latest AI-generated images</CardDescription>
+            <Card className="border bg-card/80 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="p-1 rounded-md bg-primary/10">
+                        <ImageIcon className="h-4 w-4 text-primary" />
+                      </div>
+                      Recent Creations
+                    </CardTitle>
+                    <CardDescription>Your latest AI-generated images</CardDescription>
+                  </div>
+                  <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => setActiveTab("gallery")}>
+                    View all
+                    <ChevronRight className="h-3 w-3" />
+                  </Button>
+                </div>
               </CardHeader>
-              <Separator />
+              <Separator className="opacity-50" />
               <CardContent className="pt-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {isLoading ? (
                     Array(4).fill(0).map((_, i) => (
-                      <div key={i} className="aspect-square bg-muted animate-pulse rounded-md"></div>
+                      <div key={i} className="aspect-square bg-muted animate-pulse rounded-lg"></div>
                     ))
                   ) : history.length > 0 ? (
                     history.slice(0, 4).map((item, index) => {
@@ -224,14 +283,19 @@ export default function Dashboard() {
                       const textPart = item.parts.find(part => "text" in part);
                       
                       return imagePart && "image" in imagePart ? (
-                        <div key={index} className="group relative rounded-md overflow-hidden border">
+                        <div key={index} className="group relative rounded-lg overflow-hidden border shadow-sm">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                           <img 
                             src={imagePart.image} 
                             alt={textPart && "text" in textPart ? textPart.text : "Generated image"} 
-                            className="w-full aspect-square object-cover transition-transform group-hover:scale-105"
+                            className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                            <p className="text-xs text-white line-clamp-2">
+                          <div className="absolute inset-0 flex flex-col justify-between p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Badge variant="outline" className="w-fit bg-black/50 text-white border-white/20 backdrop-blur-sm text-xs self-end">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Recent
+                            </Badge>
+                            <p className="text-xs text-white line-clamp-2 bg-black/50 p-2 rounded-md backdrop-blur-sm">
                               {textPart && "text" in textPart ? textPart.text : "Generated image"}
                             </p>
                           </div>
@@ -239,30 +303,48 @@ export default function Dashboard() {
                       ) : null;
                     })
                   ) : (
-                    <div className="col-span-full text-center py-10 text-muted-foreground">
-                      No images generated yet
+                    <div className="col-span-full flex flex-col items-center justify-center py-10 text-muted-foreground">
+                      <div className="p-3 rounded-full bg-muted mb-3">
+                        <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <p>No images generated yet</p>
+                      <Button variant="outline" size="sm" className="mt-4" asChild>
+                        <Link href="/image-generator">Create your first image</Link>
+                      </Button>
                     </div>
                   )}
                 </div>
-                {history.length > 4 && (
-                  <div className="mt-6 text-center">
-                    <Button variant="outline" onClick={() => setActiveTab("gallery")}>
-                      View All Images
-                    </Button>
-                  </div>
-                )}
               </CardContent>
+              {history.length > 4 && (
+                <CardFooter className="pt-0 pb-6 flex justify-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setActiveTab("gallery")}
+                    className="rounded-full px-6 border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary"
+                  >
+                    View All Images
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </CardFooter>
+              )}
             </Card>
           </TabsContent>
 
           {/* Gallery Tab */}
           <TabsContent value="gallery">
-            <Card>
-              <CardHeader>
-                <CardTitle>My Gallery</CardTitle>
-                <CardDescription>All your AI-generated masterpieces in one place</CardDescription>
+            <Card className="border bg-card/80 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-md bg-primary/10">
+                    <ImageIcon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>My Gallery</CardTitle>
+                    <CardDescription>All your AI-generated masterpieces in one place</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <Separator />
+              <Separator className="opacity-50" />
               <CardContent className="pt-6">
                 <GeneratedImageGallery history={history} />
               </CardContent>
@@ -271,12 +353,19 @@ export default function Dashboard() {
 
           {/* History Tab */}
           <TabsContent value="history">
-            <Card>
-              <CardHeader>
-                <CardTitle>Generation History</CardTitle>
-                <CardDescription>Track your image generation activity</CardDescription>
+            <Card className="border bg-card/80 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-md bg-primary/10">
+                    <History className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Generation History</CardTitle>
+                    <CardDescription>Track your image generation activity</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <Separator />
+              <Separator className="opacity-50" />
               <CardContent className="pt-6">
                 {isLoading ? (
                   <div className="space-y-4">
@@ -285,14 +374,14 @@ export default function Dashboard() {
                     ))}
                   </div>
                 ) : history.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {history.map((item, index) => {
                       const imagePart = item.parts.find(part => "image" in part);
                       const textPart = item.parts.find(part => "text" in part);
                       
                       return imagePart && "image" in imagePart ? (
                         <div key={index} className="flex items-center gap-4 p-3 rounded-lg border bg-card/50 hover:bg-card/80 transition-colors">
-                          <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
+                          <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0 border">
                             <img 
                               src={imagePart.image} 
                               alt="Thumbnail" 
@@ -303,11 +392,15 @@ export default function Dashboard() {
                             <p className="font-medium truncate">
                               {textPart && "text" in textPart ? textPart.text : "Generated image"}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              Generated on {new Date().toLocaleDateString()}
-                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              <p className="text-xs text-muted-foreground">
+                                Generated on {new Date().toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                          <Badge variant="outline" className="flex-shrink-0">
+                          <Badge variant="outline" className="flex-shrink-0 bg-primary/5 border-primary/20 text-primary">
+                            <Zap className="h-3 w-3 mr-1" />
                             10 credits
                           </Badge>
                         </div>
@@ -315,107 +408,16 @@ export default function Dashboard() {
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-10 text-muted-foreground">
-                    No generation history available
+                  <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                    <div className="p-3 rounded-full bg-muted mb-3">
+                      <History className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <p>No generation history available</p>
+                    <Button variant="outline" size="sm" className="mt-4" asChild>
+                      <Link href="/image-generator">Create your first image</Link>
+                    </Button>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Profile Tab */}
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Profile</CardTitle>
-                <CardDescription>Manage your account information</CardDescription>
-              </CardHeader>
-              <Separator />
-              <CardContent className="pt-6">
-                <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center gap-6">
-                    <Avatar className="h-24 w-24 border-4 border-primary/10">
-                      <AvatarImage src={user.photoURL || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-3xl">
-                        {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-1">
-                      <h3 className="text-xl font-medium">{user.displayName || 'User'}</h3>
-                      <p className="text-muted-foreground">{user.email}</p>
-                      {/* <div className="flex gap-2 mt-2">
-                        <Button variant="outline" size="sm">Change Avatar</Button>
-                        <Button variant="outline" size="sm">Edit Profile</Button>
-                      </div> */}
-                    </div>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="text-sm font-medium mb-2">Account Details</h4>
-                      <Card>
-                        <CardContent className="p-4 space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Account Type</span>
-                            <span>Standard</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Member Since</span>
-                            <span>{new Date().toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Last Login</span>
-                            <span>{new Date().toLocaleDateString()}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    <div>
-                      <h4 className="text-sm font-medium mb-2">Credit Information</h4>
-                      <Card>
-                        <CardContent className="p-4 space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Available Credits</span>
-                            <span className="font-medium">{userCredits}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Total Used</span>
-                            <span>{stats.creditsUsed}</span>
-                          </div>
-                          <div className="mt-4">
-                            <link href="/plans">
-                            <Button variant="default" size="sm" className="w-full">
-                              <CreditCard className="h-4 w-4 mr-2" />
-                              Purchase More Credits
-                            </Button>
-                            </link>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Settings</CardTitle>
-                <CardDescription>Manage your preferences and application settings</CardDescription>
-              </CardHeader>
-              <Separator />
-              <CardContent className="pt-6">
-                <div className="space-y-6">
-                  <p className="text-muted-foreground text-center py-10">
-                    Settings functionality coming soon
-                  </p>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>

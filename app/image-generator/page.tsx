@@ -55,6 +55,10 @@ export default function ImageGenerator() {
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const messageIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const user = useCurrentUser();
+  const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<string>("gemini");
+
 
   const loadingMessages = [
     "Initializing AI...",
@@ -142,18 +146,21 @@ export default function ImageGenerator() {
     }
   };
 
-  const handlePromptSubmit = async (prompt: string) => {
+  const handlePromptSubmit = async (prompt: string, model: string) => {
     try {
-      // Check if user has enough credits
-      if (userCredits < 10) {
-        setCreditDialogOpen(true);
+      // If editing an image and DALL-E is selected, show error
+      if (currentImage && model === "dalle") {
+        setError("DALL-E 3 doesn't support image editing. Please switch to Google DeepMind for editing.");
+        setIsLoading(false);
         return;
       }
-
+      
+      // Set loading states
       setLoading(true);
       setError(null);
       setProgress(0);
       setLoadingMessage(loadingMessages[0]);
+      setSelectedModel(model); // Store the selected model
 
       progressIntervalRef.current = setInterval(() => {
         setProgress((prev) => {
@@ -180,6 +187,7 @@ export default function ImageGenerator() {
         prompt,
         image: imageToEdit,
         history: history.length > 0 ? history : undefined,
+        model: currentImage ? "gemini" : model, // Force gemini if editing an image
       };
 
       const response = await fetch("/api/image", {
@@ -253,6 +261,7 @@ export default function ImageGenerator() {
       console.error("Error processing request:", error);
     } finally {
       setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -267,7 +276,6 @@ export default function ImageGenerator() {
     setLoadingMessage("Initializing AI...");
   };
 
-  const currentImage = generatedImage || (images.length > 0 ? images[0] : null);
   const isEditing = !!currentImage;
   const displayImage = generatedImage;
 
@@ -397,15 +405,16 @@ export default function ImageGenerator() {
                           </div>
                         ) : !displayImage ? (
                           <>
-                            <ImageUpload
-                              onImageSelect={handleImageSelect}
-                              currentImage={currentImage}
+                             <ImageUpload 
+                              onImageSelect={setCurrentImage} 
+                              currentImage={currentImage} 
                               onError={setError}
+                              selectedModel={selectedModel} // Pass the selected model
                             />
-                            <ImagePromptInput
+                                                  <ImagePromptInput
                               onSubmit={handlePromptSubmit}
-                              isEditing={isEditing}
-                              isLoading={loading}
+                              isEditing={!!currentImage}
+                              isLoading={isLoading}
                             />
                           </>
                         ) : (

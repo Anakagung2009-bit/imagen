@@ -13,6 +13,7 @@ interface ImageUploadProps {
   onImageSelect: (imageData: string) => void;
   currentImage: string | null;
   onError?: (error: string) => void;
+  selectedModel?: string; // Add this prop to receive the selected model
 }
 
 export function formatFileSize(bytes: number): string {
@@ -25,7 +26,12 @@ export function formatFileSize(bytes: number): string {
   );
 }
 
-export function ImageUpload({ onImageSelect, currentImage, onError }: ImageUploadProps) {
+export function ImageUpload({ 
+  onImageSelect, 
+  currentImage, 
+  onError,
+  selectedModel = "gemini" // Default to gemini if not provided
+}: ImageUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -82,6 +88,13 @@ export function ImageUpload({ onImageSelect, currentImage, onError }: ImageUploa
     setSelectedFile(null);
     onImageSelect("");
   };
+
+  // Add a useEffect to show a warning if DALL-E is selected for editing
+  useEffect(() => {
+    if (selectedModel === "dalle" && currentImage) {
+      onError?.("DALL-E 3 doesn't support image editing. Please switch to Google DeepMind for editing.");
+    }
+  }, [selectedModel, currentImage, onError]);
 
   return (
     <div className="w-full">

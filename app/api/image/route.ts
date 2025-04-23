@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { HistoryItem, HistoryPart } from "@/lib/types";
 
 // Initialize the Google Gen AI client with your API key
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || "";
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 // Define the model ID for Gemini 2.0 Flash experimental
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
   try {
     // Parse JSON request instead of FormData
     const requestData = await req.json();
-    const { prompt, image: inputImage, history } = requestData;
+    const { prompt, image: inputImage, history, model = "gemini" } = requestData;
 
     if (!prompt) {
       return NextResponse.json(
@@ -31,131 +32,268 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let response;
-
-    try {
-      // Convert history to the format expected by Gemini API
-      const formattedHistory =
-        history && history.length > 0
-          ? history
-              .map((item: HistoryItem) => {
-                return {
-                  role: item.role,
-                  parts: item.parts
-                    .map((part: HistoryPart) => {
-                      if (part.text) {
-                        return { text: part.text };
-                      }
-                      if (part.image && item.role === "user") {
-                        const imgParts = part.image.split(",");
-                        if (imgParts.length > 1) {
-                          return {
-                            inlineData: {
-                              data: imgParts[1],
-                              mimeType: part.image.includes("image/png")
-                                ? "image/png"
-                                : "image/jpeg",
-                            },
-                          };
-                        }
-                      }
-                      return { text: "" };
-                    })
-                    .filter((part) => Object.keys(part).length > 0), // Remove empty parts
-                };
-              })
-              .filter((item: FormattedHistoryItem) => item.parts.length > 0) // Remove items with no parts
-          : [];
-
-      // Prepare the current message parts
-      const messageParts = [];
-
-      // Add the text prompt
-      messageParts.push({ text: prompt });
-
-      // Add the image if provided
-      if (inputImage) {
-        // For image editing
-        console.log("Processing image edit request");
-
-        // Check if the image is a valid data URL
-        if (!inputImage.startsWith("data:")) {
-          throw new Error("Invalid image data URL format");
-        }
-
-        const imageParts = inputImage.split(",");
-        if (imageParts.length < 2) {
-          throw new Error("Invalid image data URL format");
-        }
-
-        const base64Image = imageParts[1];
-        const mimeType = inputImage.includes("image/png")
-          ? "image/png"
-          : "image/jpeg";
-        console.log(
-          "Base64 image length:",
-          base64Image.length,
-          "MIME type:",
-          mimeType
+    // Add debugging for image editing
+    if (inputImage) {
+      console.log("Image editing request received");
+      console.log("Image data length:", inputImage.length);
+      console.log("Image type:", inputImage.substring(0, 30) + "...");
+      
+      // Force model to gemini for image editing
+      if (model === "dalle") {
+        return NextResponse.json(
+          { error: "Image editing is not supported with DALL-E model. Please use Google DeepMind for image editing." },
+          { status: 400 }
         );
-
-        // Add the image to message parts
-        messageParts.push({
-          inlineData: {
-            data: base64Image,
-            mimeType: mimeType,
-          },
-        });
       }
-      // Add the message parts to the history
-      formattedHistory.push(messageParts);
-
-      // Generate the content
-      response = await ai.models.generateContent({
-        model: MODEL_ID,
-        contents: formattedHistory,
-        config: {
-          temperature: 1,
-          topP: 0.95,
-          topK: 40,
-          responseModalities: ["Text", "Image"],
-        }        
-      });
-    } catch (error) {
-      console.error("Error in chat.sendMessage:", error);
-      throw error;
     }
 
+    // Choose API based on model selection
+    if (model === "dalle" && !inputImage) {
+      return await generateWithDallE(prompt, inputImage);
+    } else {
+      return await generateWithGemini(prompt, inputImage, history);
+    }
+  } catch (error) {
+    console.error("Error generating image:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to generate image",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
+}
+
+async function generateWithDallE(prompt: string, inputImage: string | null) {
+  try {
+    console.log("Generating with DALL-E 3");
+    
+    const options = {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-rapidapi-key': RAPIDAPI_KEY,
+        'x-rapidapi-host': 'dall-e-34.p.rapidapi.com'
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        n: 1,
+        model: 'dall-e-3',
+        size: '1024x1024',
+        quality: 'standard'
+      })
+    };
+    
+    const response = await fetch('https://dall-e-34.p.rapidapi.com/v1/images/generations', options);
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.error?.message || "Failed to generate image with DALL-E");
+    }
+    
+    // Extract image URL from DALL-E response
+    const imageUrl = result.data?.[0]?.url;
+    
+    if (!imageUrl) {
+      throw new Error("No image URL returned from DALL-E");
+    }
+    
+    // Convert the image URL to base64
+    const imageResponse = await fetch(imageUrl);
+    const imageBuffer = await imageResponse.arrayBuffer();
+    const base64Image = Buffer.from(imageBuffer).toString('base64');
+    const mimeType = "image/png";
+    
+    return NextResponse.json({
+      image: `data:${mimeType};base64,${base64Image}`,
+      description: prompt,
+    });
+  } catch (error) {
+    console.error("Error with DALL-E:", error);
+    throw error;
+  }
+}
+
+async function generateWithGemini(prompt: string, inputImage: string | null, history: any) {
+  try {
+    // Convert history to the format expected by Gemini API
+    const formattedHistory = [];
+    
+    // Add history items if available
+    if (history && history.length > 0) {
+      history.forEach((item: HistoryItem) => {
+        if (item.parts && item.parts.length > 0) {
+          const formattedItem = {
+            role: item.role,
+            parts: item.parts
+              .map((part: HistoryPart) => {
+                if (part.text) {
+                  return { text: part.text };
+                }
+                if (part.image && item.role === "user") {
+                  const imgParts = part.image.split(",");
+                  if (imgParts.length > 1) {
+                    return {
+                      inlineData: {
+                        data: imgParts[1],
+                        mimeType: part.image.includes("image/png")
+                          ? "image/png"
+                          : "image/jpeg",
+                      },
+                    };
+                  }
+                }
+                return null;
+              })
+              .filter(Boolean), // Remove null parts
+          };
+          
+          if (formattedItem.parts.length > 0) {
+            formattedHistory.push(formattedItem);
+          }
+        }
+      });
+    }
+
+    // Prepare the current message parts
+    const currentParts = [];
+
+    // Add the text prompt
+    currentParts.push({ text: prompt });
+
+    // Add the image if provided
+    if (inputImage) {
+      // For image editing
+      console.log("Processing image edit request");
+
+      // Check if the image is a valid data URL
+      if (!inputImage.startsWith("data:")) {
+        throw new Error("Invalid image data URL format");
+      }
+
+      const imageParts = inputImage.split(",");
+      if (imageParts.length < 2) {
+        throw new Error("Invalid image data URL format");
+      }
+
+      const base64Image = imageParts[1];
+      const mimeType = inputImage.includes("image/png")
+        ? "image/png"
+        : "image/jpeg";
+      console.log(
+        "Base64 image length:",
+        base64Image.length,
+        "MIME type:",
+        mimeType
+      );
+
+      // Add the image to message parts
+      currentParts.push({
+        inlineData: {
+          data: base64Image,
+          mimeType: mimeType,
+        },
+      });
+    }
+    
+    // Add the current message to the history
+    formattedHistory.push({
+      role: "user",
+      parts: currentParts,
+    });
+
+    console.log("Sending request to Gemini with formatted history:", 
+      JSON.stringify(formattedHistory, null, 2).substring(0, 200) + "...");
+
+    // Generate the content
+    const response = await ai.models.generateContent({
+      model: MODEL_ID,
+      contents: formattedHistory,
+      config: {
+        temperature: 1,
+        topP: 0.95,
+        topK: 40,
+        responseModalities: ["Text", "Image"],
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+          },
+        ],
+      }        
+    });
+    
+    console.log("Response received from Gemini API");
+    
     let textResponse = null;
     let imageData = null;
     let mimeType = "image/png";
     let imageKitUrl = null;
 
-    // Process the response
-    if (response.candidates && response.candidates.length > 0) {
-      const parts = response.candidates[0].content.parts;
-      console.log("Number of parts in response:", parts.length);
-    
-      for (const part of parts) {
-        if ("inlineData" in part && part.inlineData) {
-          // Get the image data
-          imageData = part.inlineData.data;
-          mimeType = part.inlineData.mimeType || "image/png";
-          console.log(
-            "Image data received, length:",
-            imageData.length,
-            "MIME type:",
-            mimeType
-          );
-        } else if ("text" in part && part.text) {
-          // Store the text
-          textResponse = part.text;
-          console.log(
-            "Text response received:",
-            textResponse.substring(0, 50) + "..."
-          );
-        }
+    // Process the response - Add error handling for missing properties
+    if (response && response.candidates && response.candidates.length > 0) {
+      const candidate = response.candidates[0];
+      
+      // Check for safety issues
+      if (candidate.finishReason === "IMAGE_SAFETY") {
+        return NextResponse.json(
+          { 
+            error: "The image couldn't be processed due to safety concerns. Please try a different image or prompt.",
+            details: "IMAGE_SAFETY"
+          },
+          { status: 400 }
+        );
       }
+      
+      // Check if content and parts exist before accessing them
+      if (candidate.content && candidate.content.parts) {
+        const parts = candidate.content.parts;
+        console.log("Number of parts in response:", parts.length);
+      
+        for (const part of parts) {
+          if ("inlineData" in part && part.inlineData) {
+            // Get the image data
+            imageData = part.inlineData.data;
+            mimeType = part.inlineData.mimeType || "image/png";
+            console.log(
+              "Image data received, length:",
+              imageData?.length,
+              "MIME type:",
+              mimeType
+            );
+          } else if ("text" in part && part.text) {
+            // Store the text
+            textResponse = part.text;
+            console.log(
+              "Text response received:",
+              textResponse.substring(0, 50) + "..."
+            );
+          }
+        }
+      } else {
+        console.log("Response candidate doesn't have expected content structure:", candidate);
+        return NextResponse.json(
+          { 
+            error: "The AI couldn't generate an image. Please try a different prompt.",
+            details: "No content in response"
+          },
+          { status: 400 }
+        );
+      }
+      
       if (imageData) {
         try {
           const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/upload-image`, {
@@ -176,9 +314,15 @@ export async function POST(req: NextRequest) {
           console.error("Failed to upload image to ImageKit:", uploadErr);
         }
       }
-
     } else {
-      console.log("No candidates found in the API response");
+      console.log("No valid candidates found in the API response:", response);
+      return NextResponse.json(
+        { 
+          error: "The AI couldn't generate an image. Please try a different prompt.",
+          details: "No valid candidates in response"
+        },
+        { status: 400 }
+      );
     }    
 
     // Return just the base64 image and description as JSON
@@ -187,13 +331,7 @@ export async function POST(req: NextRequest) {
       description: textResponse,
     });
   } catch (error) {
-    console.error("Error generating image:", error);
-    return NextResponse.json(
-      {
-        error: "Failed to generate image",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 }
-    );
+    console.error("Error in generateWithGemini:", error);
+    throw error;
   }
 }

@@ -11,7 +11,8 @@ import {
   Building2, 
   CheckCircle2, 
   ShieldCheck,
-  Lock
+  Lock,
+  Loader2,
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const planDetails = {
     Basic: { name: 'Basic', credits: 1000, priceIDR: 'Rp 50.000', priceUSD: 'USD 5.00' },
@@ -30,7 +32,7 @@ const planDetails = {
 };
 
 
-export default function CheckoutClient  () {
+export default function CheckoutClient() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { toast } = useToast();
@@ -328,22 +330,24 @@ export default function CheckoutClient  () {
                 >
                   Back
                 </Button>
-                <Button
+
+                <Button 
                   onClick={handlePayment}
                   disabled={loading || !selectedMethod}
-                  className="sm:w-2/3 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-sm sm:text-base"
+                  variant="premium"
+                  className="sm:flex-1 text-sm sm:text-base font-medium"
                 >
                   {loading ? (
-                    <span className="flex items-center">
-                      Processing <motion.span 
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ repeat: Infinity, duration: 1.5 }}
-                      >...</motion.span>
-                    </span>
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
                   ) : (
-                    <span className="flex items-center">
-                      Pay {selectedCountry === 'US' ? planInfo.priceUSD : planInfo.priceIDR} <Lock className="ml-2 h-4 w-4" />
-                    </span>
+                    <>
+                      Pay {selectedCountry === 'US' 
+                        ? planInfo.priceUSD.replace('USD ', '$') 
+                        : planInfo.priceIDR}
+                    </>
                   )}
                 </Button>
               </div>
