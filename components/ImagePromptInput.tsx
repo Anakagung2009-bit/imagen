@@ -1,4 +1,3 @@
-// ImagePromptInput.tsx
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "./ui/textarea";
@@ -12,13 +11,6 @@ import { Progress } from "./ui/progress";
 import { Loader2, Sparkles, ImageIcon, BrainCircuit, Info } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 
 interface ImagePromptInputProps {
   onSubmit: (prompt: string, model: string) => void;
@@ -31,7 +23,7 @@ export function ImagePromptInput({ onSubmit, isEditing, isLoading }: ImagePrompt
   const [error, setError] = useState<string | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("gemini");
-  const user = useCurrentUser();
+  const user = useCurrentUser ();
 
   const OPERATION_COST = 10;
 
@@ -86,6 +78,7 @@ export function ImagePromptInput({ onSubmit, isEditing, isLoading }: ImagePrompt
       setCredits((prev) => (prev ?? 0) + OPERATION_COST); // Revert optimistic update
     }
   };
+
 
   return (
     <Card className="w-full bg-card border shadow-md rounded-xl overflow-hidden">
@@ -158,11 +151,11 @@ export function ImagePromptInput({ onSubmit, isEditing, isLoading }: ImagePrompt
               Select AI Model
             </h3>
             <Badge variant={selectedModel === "gemini" ? "default" : "outline"} className="ml-2 text-xs">
-              {selectedModel === "gemini" ? "Google DeepMind" : "DALL-E 3"}
+              {selectedModel === "gemini" ? "Google DeepMind" : selectedModel === "dalle" ? "DALL-E 3" : "Runway ML"}
             </Badge>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Button
               type="button"
               variant="outline"
@@ -220,14 +213,36 @@ export function ImagePromptInput({ onSubmit, isEditing, isLoading }: ImagePrompt
                 </div>
               </div>
             </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(
+                "h-auto py-3 px-4 justify-start border",
+                selectedModel === "runway" 
+                  ? "bg-primary/10 text-primary border-primary/30 ring-1 ring-primary/20" 
+                  : "hover:bg-muted/50"
+              )}
+              onClick={() => setSelectedModel("runway")}
+              disabled={isLoading}
+            >
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "p-1.5 rounded-md",
+                  selectedModel === "runway" ? "bg-primary/20" : "bg-muted"
+                )}>
+                  <Sparkles className={cn(
+                    "h-4 w-4",
+                    selectedModel === "runway" ? "text-primary" : "text-muted-foreground"
+                  )} />
+                </div>
+                <div className="text-left">
+                  <div className="font-medium text-sm">Runway ML</div>
+                  <div className="text-xs text-muted-foreground">Creative image generation</div>
+                </div>
+              </div>
+            </Button>
           </div>
-          
-          {isEditing && selectedModel === "dalle" && (
-            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">
-              <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <p>DALL-E 3 doesn't support image editing. Please use Google DeepMind for editing.</p>
-            </div>
-          )}
         </div>
   
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -245,7 +260,9 @@ export function ImagePromptInput({ onSubmit, isEditing, isLoading }: ImagePrompt
                   ? "Example: Make the background blue and add a rainbow..."
                   : selectedModel === "gemini" 
                     ? "Example: A 3D rendered image of a pig with wings and a top hat flying over a futuristic city..."
-                    : "Example: A photorealistic portrait of a medieval knight with ornate armor in a forest setting..."
+                    : selectedModel === "dalle"
+                      ? "Example: A photorealistic portrait of a medieval knight with ornate armor in a forest setting..."
+                      : "Example: A vibrant sunset over a mountain range..."
               }
               className="min-h-[120px] resize-none rounded-xl border focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/30"
               maxLength={500}
@@ -262,11 +279,13 @@ export function ImagePromptInput({ onSubmit, isEditing, isLoading }: ImagePrompt
               "w-full relative overflow-hidden group h-12",
               selectedModel === "gemini" 
                 ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800" 
-                : "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800",
+                : selectedModel === "dalle"
+                  ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+                  : "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800",
               "text-white font-medium",
               "hover:scale-[1.01] active:scale-[0.99] transition-all duration-200",
               "shadow-lg",
-              selectedModel === "gemini" ? "shadow-blue-500/20" : "shadow-purple-500/20",
+              selectedModel === "gemini" ? "shadow-blue-500/20" : selectedModel === "dalle" ? "shadow-purple-500/20" : "shadow-green-500/20",
               "disabled:opacity-50 disabled:pointer-events-none"
             )}
           >
@@ -279,7 +298,7 @@ export function ImagePromptInput({ onSubmit, isEditing, isLoading }: ImagePrompt
                 </>
               ) : (
                 <>
-                  {selectedModel === "gemini" ? <BrainCircuit className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
+                  {selectedModel === "gemini" ? <BrainCircuit className="h-5 w-5" /> : selectedModel === "dalle" ? <Sparkles className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
                   <span>{isEditing ? "Edit Image" : "Generate Image"}</span>
                 </>
               )}

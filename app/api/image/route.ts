@@ -23,7 +23,13 @@ export async function POST(req: NextRequest) {
   try {
     // Parse JSON request instead of FormData
     const requestData = await req.json();
-    const { prompt, image: inputImage, history, model = "gemini" } = requestData;
+    const { prompt, image: inputImage, history, model = "gemini", action } = requestData;
+    
+
+    // Handle background removal if action is specified
+    if (action === "remove-background") {
+      return await removeBackground(inputImage);
+    }
 
     if (!prompt) {
       return NextResponse.json(
@@ -48,16 +54,79 @@ export async function POST(req: NextRequest) {
     }
 
     // Choose API based on model selection
-    if (model === "dalle" && !inputImage) {
+    if (model === "gen3") {
+      return await generateWithRunwayGen3(prompt);
+    } else if (model === "dalle" && !inputImage) {
       return await generateWithDallE(prompt, inputImage);
     } else {
       return await generateWithGemini(prompt, inputImage, history);
-    }
+    }    
   } catch (error) {
     console.error("Error generating image:", error);
     return NextResponse.json(
       {
         error: "Failed to generate image",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// New function to handle background removal
+async function removeBackground(imageData: string) {
+  try {
+    console.log("Background removal request received");
+    
+    if (!imageData) {
+      return NextResponse.json(
+        { error: "Image data is required" },
+        { status: 400 }
+      );
+    }
+    
+    // Extract base64 data from the data URL
+    const base64Data = imageData.split(',')[1];
+    
+    // Create form data for the API request
+    const formData = new URLSearchParams();
+    formData.append('image_base64', base64Data);
+    
+    console.log("Sending request to background removal API");
+    
+    // Make request to RapidAPI - using the correct endpoint
+    const response = await fetch('https://ai-background-remover.p.rapidapi.com/image/matte/v1', {
+      method: 'POST',
+      headers: {
+        'x-rapidapi-key': RAPIDAPI_KEY || '96af46f234mshfeee77a204fe2f7p1693ffjsn33c63d01c2ae',
+        'x-rapidapi-host': 'ai-background-remover.p.rapidapi.com',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: formData.toString()
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Background removal API error:", errorText);
+      return NextResponse.json(
+        { error: "Failed to remove background", details: errorText },
+        { status: response.status }
+      );
+    }
+    
+    const result = await response.json();
+    console.log("Background removal successful");
+    
+    // Return the processed image
+    return NextResponse.json({
+      image: result.image_url || result.base64 || result.image,
+      success: true
+    });
+  } catch (error) {
+    console.error("Error removing background:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to remove background",
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
@@ -114,6 +183,51 @@ async function generateWithDallE(prompt: string, inputImage: string | null) {
     throw error;
   }
 }
+
+
+async function generateWithRunwayGen3(prompt: string) {
+  try {
+    console.log("Generating with Runway Gen-3");
+
+    const response = await fetch("https://runwayml.p.rapidapi.com/generate/text", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-rapidapi-key": RAPIDAPI_KEY,
+        "x-rapidapi-host": "runwayml.p.rapidapi.com",
+      },
+      body: JSON.stringify({
+        text_prompt: prompt,
+        model: "gen3",
+        width: 1920,
+        height: 1080,
+        motion: 5,
+        seed: 0,
+        callback_url: "",
+        time: 5
+      })
+    });
+
+    const result = await response.json();
+    console.log("Runway Gen-3 response:", result);
+
+    if (!response.ok) {
+      throw new Error(result.error?.message || "Failed to generate with Runway Gen-3");
+    }
+
+    return NextResponse.json({
+      videoResult: result,
+      description: prompt,
+    });
+  } catch (error) {
+    console.error("Error with Runway Gen-3:", error);
+    return NextResponse.json(
+      { error: "Failed to generate video with Runway Gen-3" },
+      { status: 500 }
+    );
+  }
+}
+
 
 async function generateWithGemini(prompt: string, inputImage: string | null, history: any) {
   try {
