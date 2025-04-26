@@ -37,6 +37,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link"
+import { cn } from "@/lib/utils";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 export default function ImageGenerator() {
   const [images, setImages] = useState<string[]>([]); // Array of strings
@@ -280,255 +282,271 @@ export default function ImageGenerator() {
   const displayImage = generatedImage;
 
   return (
-    <main className="min-h-screen to-muted/20">
+    <div className="min-h-screen">
       {showConfetti && (
         <div className="fixed inset-0 pointer-events-none z-50">
           {/* Confetti animation would go here */}
         </div>
       )}
       
-      <div className="container px-4 py-8 mx-auto max-w-7xl">
-        <header className="flex flex-col md:flex-row items-center justify-between mb-12">
-          <div className="space-y-2 text-center md:text-left mb-6 md:mb-0">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-full bg-primary/10">
-                <Sparkles className="w-6 h-6 text-primary" />
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-                Agung Imagen AI
-              </h1>
-            </div>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Unleash your creativity with AI-powered image generation
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Tooltip.Provider>
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Zap className="w-4 h-4 text-yellow-500" />
-                    <span className="font-medium">{userCredits}</span>
-                    <span className="sr-only md:not-sr-only text-xs text-muted-foreground">credits</span>
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content className="p-2 text-xs bg-background border rounded-md shadow-md">
-                  Your remaining AI credits
-                </Tooltip.Content>
-              </Tooltip.Root>
-            </Tooltip.Provider>
-            
-            {user && (
+      <div className="container mx-auto px-4 py-4 max-w-7xl">
+        <div className="flex flex-col gap-6">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="px-2 py-1 text-xs">
-                  {user.email?.split('@')[0] || 'User'}
-                </Badge>
+                <div className="p-2 rounded-full bg-primary/10">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
+                  Agung Imagen AI
+                </h1>
               </div>
-            )}
-          </div>
-        </header>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-9">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab + (loading ? '-loading' : '')}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card className="border bg-card/50 backdrop-blur-sm shadow-md overflow-hidden">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Unleash your creativity with AI-powered image generation
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <Tooltip.Provider>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <Button variant="outline" size="sm">
                       <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-full bg-primary/10">
-                          <Wand2 className="w-5 h-5 text-primary" />
-                        </div>
-                        <CardTitle className="text-xl font-medium">AI Image Studio</CardTitle>
+                        <Zap className="w-4 h-4 text-yellow-500" />
+                        <span className="font-medium">{userCredits}</span>
+                        <span className="sr-only md:not-sr-only text-xs text-muted-foreground">credits</span>
                       </div>
-                      <HoverCard>
-                        <HoverCardTrigger>
-                
-                        </HoverCardTrigger>
-                        <HoverCardContent className="w-80">
-                          <div className="flex justify-between space-x-4">
-                            <div className="space-y-1">
-                              <h4 className="text-sm font-semibold">Google DeepMind Gemini 2.0 Flash</h4>
-                              <p className="text-sm text-muted-foreground">
-                                Using cutting-edge AI technology for high-quality image generation and editing
-                              </p>
-                            </div>
-                          </div>
-                        </HoverCardContent>
-                      </HoverCard>
-                    </div>
-                  </CardHeader>
-                  
-                  <Separator />
-                  
-                  <CardContent className="p-6">
-                    {error && (
-                      <Alert variant="destructive" className="mb-6">
-                        <AlertTitle>Error</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
-                    )}
-                    
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                      <TabsList className="grid w-full grid-cols-2 mb-6">
-                        <TabsTrigger value="create" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                          <ImageIcon className="w-4 h-4 mr-2" />
-                          Create
-                        </TabsTrigger>
-                        <TabsTrigger value="edit" disabled={!currentImage} className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                          <Wand2 className="w-4 h-4 mr-2" />
-                          Edit
-                        </TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="create" className="space-y-6">
-                        {loading ? (
-                          <div className="space-y-6 p-8 rounded-lg border bg-card/50">
-                            <div className="space-y-2">
-                              <Progress value={progress} className="h-2" />
-                              <p className="text-sm text-center text-muted-foreground animate-pulse">
-                                {loadingMessage}
-                              </p>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                              {[1, 2, 3].map((i) => (
-                                <Skeleton key={i} className="aspect-square rounded-lg" />
-                              ))}
-                            </div>
-                          </div>
-                        ) : !displayImage ? (
-                          <>
-                             <ImageUpload 
-                              onImageSelect={setCurrentImage} 
-                              currentImage={currentImage} 
-                              onError={setError}
-                              selectedModel={selectedModel} // Pass the selected model
-                            />
-                                                  <ImagePromptInput
-                              onSubmit={handlePromptSubmit}
-                              isEditing={!!currentImage}
-                              isLoading={isLoading}
-                            />
-                          </>
-                        ) : (
-                          <ImageResultDisplay
-                            imageUrl={displayImage}
-                            description={description}
-                            onReset={handleReset}
-                            conversationHistory={history}
-                          />
-                        )}
-                      </TabsContent>
-                      
-                      <TabsContent value="edit">
-                        {isEditing && (
-                          <div className="space-y-6">
-                            <div className="relative aspect-square max-w-md mx-auto rounded-lg overflow-hidden border shadow-md">
-                              <img 
-                                src={currentImage} 
-                                alt="Image to edit" 
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <ImagePromptInput
-                              onSubmit={handlePromptSubmit}
-                              isEditing={true}
-                              isLoading={loading}
-                            />
-                          </div>
-                        )}
-                      </TabsContent>
-                    </Tabs>
-                  </CardContent>
-                  
-                  <CardFooter className="p-6 pt-0">
-                    <div className="w-full flex flex-col sm:flex-row gap-3">
-                      <Button
-                        onClick={handleReset}
-                        variant="outline"
-                        className="flex-1 hover:bg-destructive hover:text-destructive-foreground"
-                      >
-                        <Rocket className="w-4 h-4 mr-2" />
-                        Start New Project
-                      </Button>
-                      <Link href="/plans" className="flex-1">
-                        <Button variant="default" className="w-full">
-                            <Zap className="w-4 h-4 mr-2" />
-                            Get More Credits
-                        </Button>
-                        </Link>
-                    </div>
-                  </CardFooter>
-                </Card>
-              </motion.div>
-            </AnimatePresence>
+                    </Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content className="p-2 text-xs bg-background border rounded-md shadow-md">
+                    Your remaining AI credits
+                  </Tooltip.Content>
+                </Tooltip.Root>
+              </Tooltip.Provider>
+              
+              {user && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">
+                    {user.email?.split('@')[0] || 'User'}
+                  </Badge>
+                </div>
+              )}
+            </div>
           </div>
           
-          <div className="lg:col-span-3">
-            <Card className="border bg-card/50 backdrop-blur-sm shadow-md h-full">
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-2">
-                  <History className="w-4 h-4 text-muted-foreground" />
-                  <CardTitle className="text-lg font-medium">Recent Images</CardTitle>
-                </div>
-              </CardHeader>
-              
-              <Separator />
-              
-              <CardContent className="p-4">
-                <ScrollArea className="h-[500px] pr-4">
-                  <div className="space-y-4">
-                    {history.length > 0 ? (
-                      history
-                        .filter(item => item.role === "model" && item.parts.some(part => "image" in part))
-                        .slice(-10)
-                        .reverse()
-                        .map((item, index) => {
-                          const imagePart = item.parts.find(part => "image" in part);
-                          const textPart = item.parts.find(part => "text" in part);
-                          return imagePart && "image" in imagePart ? (
-                            <div key={index} className="group relative rounded-md overflow-hidden border">
-                              <img 
-                                src={imagePart.image} 
-                                alt={textPart && "text" in textPart ? textPart.text : "Generated image"} 
-                                className="w-full aspect-square object-cover transition-transform group-hover:scale-105"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                                <p className="text-xs text-white line-clamp-2">
-                                  {textPart && "text" in textPart ? textPart.text : "Generated image"}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-3">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab + (loading ? '-loading' : '')}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 rounded-full bg-primary/10">
+                            <Wand2 className="w-5 h-5 text-primary" />
+                          </div>
+                          <CardTitle>AI Image Studio</CardTitle>
+                        </div>
+                        <HoverCard>
+                          <HoverCardTrigger>
+                            {/* Trigger content */}
+                          </HoverCardTrigger>
+                          <HoverCardContent>
+                            <div className="flex gap-4 justify-between">
+                              <div className="flex flex-col gap-1">
+                                <p className="text-sm font-bold">Google DeepMind Gemini 2.0 Flash</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Using cutting-edge AI technology for high-quality image generation and editing
                                 </p>
                               </div>
                             </div>
-                          ) : null;
-                        })
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground text-sm">
-                        No images generated yet
+                          </HoverCardContent>
+                        </HoverCard>
                       </div>
-                    )}
+                    </CardHeader>
+                    
+                    <Separator />
+                    
+                    <CardContent className="p-6">
+                      {error && (
+                        <Alert variant="destructive" className="mb-6">
+                          <AlertTitle>Error</AlertTitle>
+                          <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      <Tabs value={activeTab} onValueChange={setActiveTab}>
+                        <TabsList className="grid w-full grid-cols-2 mb-6">
+                          <TabsTrigger value="create">
+                            <div className="flex items-center gap-2">
+                              <ImageIcon className="w-4 h-4" />
+                              <span>Create</span>
+                            </div>
+                          </TabsTrigger>
+                          <TabsTrigger value="edit" disabled={!currentImage}>
+                            <div className="flex items-center gap-2">
+                              <Wand2 className="w-4 h-4" />
+                              <span>Edit</span>
+                            </div>
+                          </TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="create">
+                          <div className="flex flex-col gap-6">
+                            {loading ? (
+                              <div className="p-8 rounded-lg border">
+                                <div className="flex flex-col gap-6">
+                                  <div className="flex flex-col gap-2">
+                                    <Progress value={progress} className="h-2" />
+                                    <p className="text-xs text-center text-muted-foreground animate-pulse">
+                                      {loadingMessage}
+                                    </p>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                                    {[1, 2, 3].map((i) => (
+                                      <Skeleton key={i} className="aspect-square rounded-lg" />
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : !displayImage ? (
+                              <>
+                                <ImageUpload 
+                                  onImageSelect={setCurrentImage} 
+                                  currentImage={currentImage} 
+                                  onError={setError}
+                                  selectedModel={selectedModel}
+                                />
+                                <ImagePromptInput
+                                  onSubmit={handlePromptSubmit}
+                                  isEditing={!!currentImage}
+                                  isLoading={isLoading}
+                                />
+                              </>
+                            ) : (
+                              <ImageResultDisplay
+                                imageUrl={displayImage}
+                                description={description}
+                                onReset={handleReset}
+                                conversationHistory={history}
+                              />
+                            )}
+                          </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="edit">
+                          {isEditing && (
+                            <div className="flex flex-col gap-6">
+                              <div className="max-w-md mx-auto">
+                                <AspectRatio ratio={1}>
+                                  <img 
+                                    src={currentImage} 
+                                    alt="Image to edit" 
+                                    className="rounded-lg object-cover w-full h-full border shadow-md"
+                                  />
+                                </AspectRatio>
+                              </div>
+                              <ImagePromptInput
+                                onSubmit={handlePromptSubmit}
+                                isEditing={true}
+                                isLoading={loading}
+                              />
+                            </div>
+                          )}
+                        </TabsContent>
+                      </Tabs>
+                    </CardContent>
+                    
+                    <CardFooter className="p-6 pt-0">
+                      <div className="flex flex-col sm:flex-row gap-3 w-full">
+                        <Button
+                          onClick={handleReset}
+                          variant="outline"
+                          className="flex-1 hover:bg-destructive hover:text-destructive-foreground"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Rocket className="w-4 h-4" />
+                            <span>Start New Project</span>
+                          </div>
+                        </Button>
+                        <Link href="/plans" className="flex-1">
+                          <Button variant="default" className="w-full">
+                            <div className="flex items-center gap-2">
+                              <Zap className="w-4 h-4" />
+                              <span>Get More Credits</span>
+                            </div>
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+            
+            <div className="lg:col-span-1">
+              <Card className="h-full">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <History className="w-4 h-4 text-muted-foreground" />
+                    <CardTitle className="text-lg">Recent Images</CardTitle>
                   </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                </CardHeader>
+                
+                <Separator />
+                
+                <CardContent className="p-4">
+                  <ScrollArea className="h-[500px] pr-4">
+                    <div className="flex flex-col gap-4">
+                      {history.length > 0 ? (
+                        history
+                          .filter(item => item.role === "model" && item.parts.some(part => "image" in part))
+                          .slice(-10)
+                          .reverse()
+                          .map((item, index) => {
+                            const imagePart = item.parts.find(part => "image" in part);
+                            const textPart = item.parts.find(part => "text" in part);
+                            return imagePart && "image" in imagePart ? (
+                              <div key={index} className="group relative rounded-md overflow-hidden border">
+                                <AspectRatio ratio={1}>
+                                  <img 
+                                    src={imagePart.image} 
+                                    alt={textPart && "text" in textPart ? textPart.text : "Generated image"} 
+                                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                  />
+                                </AspectRatio>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                                  <p className="text-xs text-white line-clamp-2">
+                                    {textPart && "text" in textPart ? textPart.text : "Generated image"}
+                                  </p>
+                                </div>
+                              </div>
+                            ) : null;
+                          })
+                      ) : (
+                        <div className="flex items-center justify-center py-8">
+                          <p className="text-xs text-muted-foreground">No images generated yet</p>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
-        
-        {/* <div className="mt-16">
-          <GeneratedImageGallery history={history} />
-        </div> */}
       </div>
       
       <CreditDialog 
         isOpen={isCreditDialogOpen} 
         onClose={() => setCreditDialogOpen(false)}
       />
-    </main>
+    </div>
   );
 }

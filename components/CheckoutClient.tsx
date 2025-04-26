@@ -24,6 +24,14 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import qris from '@/assets/qris.png'
+import bri from '@/assets/bri.png'
+import bca from '@/assets/bca.png'
+import mandiri from '@/assets/mandiir.png'
+import paypal from '@/assets/paypal.png'
+
+// Add these imports for payment method logos
+import Image from 'next/image';
 
 const planDetails = {
     Basic: { name: 'Basic', credits: 1000, priceIDR: 'Rp 50.000', priceUSD: 'USD 5.00' },
@@ -52,24 +60,28 @@ export default function CheckoutClient() {
           name: 'QRIS / GoPay', 
           value: 'gopay',
           icon: <QrCode className="h-5 w-5" />,
+          logo: qris,
           description: 'Pay using any QRIS-compatible e-wallet',
         },
         { 
           name: 'BRI Virtual Account', 
           value: 'bri_va',
           icon: <Building2 className="h-5 w-5" />,
+          logo: bri,
           description: 'Pay via BRI internet banking or ATM',
         },
         { 
           name: 'BCA Virtual Account', 
           value: 'bci_va',
           icon: <Building2 className="h-5 w-5" />,
+          logo: bca,
           description: 'Pay via BCA internet banking or ATM',
         },
         { 
           name: 'Mandiri Virtual Account', 
           value: 'mandiri_va',
           icon: <Building2 className="h-5 w-5" />,
+          logo: mandiri,
           description: 'Pay via Mandiri internet banking or ATM',
         },
         // Add other Midtrans payment methods here...  
@@ -81,12 +93,14 @@ export default function CheckoutClient() {
           name: 'PayPal',
           value: 'paypal',
           icon: <CreditCard className="h-5 w-5" />,
+          logo: paypal,
           description: 'Pay using your PayPal account',
         },
         {
             name: 'Credit Card',
             value: 'credit_card',
             icon: <CreditCard className="h-5 w-5" />,
+            logo: paypal,
             description: 'Pay using your credit card',
           
         }
@@ -200,49 +214,49 @@ export default function CheckoutClient() {
     };
   
     return (
-      <div className="min-h-screen to-muted/20 py-6 sm:py-12">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-6 sm:py-12">
         <div className="max-w-3xl mx-auto px-3 sm:px-4">
-          <Card className="border shadow-lg overflow-hidden">
+          <Card className="border shadow-lg overflow-hidden rounded-xl">
             <CardHeader className="bg-muted/30 border-b p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <CardTitle className="text-xl sm:text-2xl">Checkout</CardTitle>
+                  <CardTitle className="text-xl sm:text-2xl font-bold">Checkout</CardTitle>
                   <CardDescription>Complete your purchase to get credits</CardDescription>
                 </div>
                 <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 px-3 py-1.5 w-fit">
-                  {planInfo.name}
+                  {planInfo.name} Plan
                 </Badge>
               </div>
             </CardHeader>
             
             <CardContent className="p-4 sm:p-6 space-y-6 sm:space-y-8">
               {/* Order Summary */}
-              <div className="bg-muted/20 rounded-lg p-3 sm:p-4 border">
-                <h3 className="font-medium mb-3">Order Summary</h3>
-                <div className="space-y-2">
+              <div className="bg-muted/20 rounded-lg p-4 sm:p-5 border">
+                <h3 className="font-medium text-lg mb-3">Order Summary</h3>
+                <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">{planInfo.name}</span>
+                    <span className="text-muted-foreground">{planInfo.name} Plan</span>
                     <span className="font-medium">{selectedCountry === 'US' ? planInfo.priceUSD : planInfo.priceIDR}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Credits</span>
-                    <span className="font-medium">{planInfo.credits.toLocaleString()}</span>
+                    <span className="font-medium">{planInfo.credits === Infinity ? "Unlimited" : planInfo.credits.toLocaleString()}</span>
                   </div>
-                  <Separator className="my-2" />
+                  <Separator className="my-3" />
                   <div className="flex justify-between items-center">
                     <span className="font-medium">Total</span>
-                    <span className="font-bold text-lg">{selectedCountry === 'US' ? planInfo.priceUSD : planInfo.priceIDR}</span>
+                    <span className="font-bold text-lg text-primary">{selectedCountry === 'US' ? planInfo.priceUSD : planInfo.priceIDR}</span>
                   </div>
                 </div>
               </div>
               
               {/* Payment Methods */}
               <div>
-                <h3 className="font-medium mb-4">Select Payment Method</h3>
+                <h3 className="font-medium text-lg mb-4">Select Payment Method</h3>
                 <RadioGroup 
                     value={selectedMethod || ""} 
                     onValueChange={setSelectedMethod}
-                    className="space-y-3"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-3"
                 >
                     <AnimatePresence>
                     {filteredPaymentMethods.map((method) => (
@@ -254,32 +268,40 @@ export default function CheckoutClient() {
                         className="relative"
                         >
                         <div 
-                            className={`
-                            flex items-start space-x-3 border rounded-lg p-4 transition-all
-                            ${selectedMethod === method.value 
-                                ? 'border-primary bg-primary/5 ring-1 ring-primary/30' 
-                                : 'hover:border-muted-foreground/30 hover:bg-muted/30'
-                            }
-                            `}
+                            className={cn(
+                              "flex items-start space-x-3 border rounded-lg p-4 transition-all cursor-pointer",
+                              selectedMethod === method.value 
+                                ? "border-primary bg-primary/5 ring-1 ring-primary/30" 
+                                : "hover:border-muted-foreground/30 hover:bg-muted/30"
+                            )}
+                            onClick={() => setSelectedMethod(method.value)}
                         >
                             <RadioGroupItem 
                             value={method.value} 
                             id={method.value} 
-                            disabled={false} // Ganti dengan kondisi loading jika perlu
+                            disabled={loading}
                             className="mt-1"
                             />
                             <Label 
                             htmlFor={method.value} 
                             className="flex-1 flex items-start cursor-pointer"
                             >
-                            <div className={`
-                                p-2 rounded-md mr-3 
-                                ${selectedMethod === method.value 
-                                ? 'bg-primary/10 text-primary' 
-                                : 'bg-muted text-muted-foreground'
-                                }
-                            `}>
-                                {method.icon}
+                            <div className={cn(
+                                "w-12 h-12 rounded-md mr-3 flex items-center justify-center overflow-hidden",
+                                selectedMethod === method.value 
+                                ? "bg-white shadow-sm" 
+                                : "bg-muted"
+                            )}>
+                                {method.logo ? (
+                                  <div className="relative w-10 h-10">
+                                    <Image 
+                                      src={method.logo}
+                                      alt={method.name}
+                                      fill
+                                      className="object-contain"
+                                    />
+                                  </div>
+                                ) : method.icon}
                             </div>
                             <div className="space-y-1">
                                 <p className="font-medium">{method.name}</p>
@@ -298,7 +320,7 @@ export default function CheckoutClient() {
               
               {/* Security Notice */}
               <Alert variant="default" className="bg-muted/30 border-muted-foreground/20 text-xs sm:text-sm">
-                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                <ShieldCheck className="h-4 w-4 text-primary" />
                 <AlertTitle className="text-xs sm:text-sm font-medium">Secure Payment</AlertTitle>
                 <AlertDescription className="text-xs text-muted-foreground">
                   All transactions are secured with SSL encryption. Your payment information is never stored on our servers.
@@ -334,8 +356,14 @@ export default function CheckoutClient() {
                 <Button 
                   onClick={handlePayment}
                   disabled={loading || !selectedMethod}
-                  variant="premium"
-                  className="sm:flex-1 text-sm sm:text-base font-medium"
+                  className={cn(
+                    "sm:flex-1 text-sm sm:text-base font-medium relative overflow-hidden group",
+                    "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70",
+                    "text-white",
+                    "hover:scale-[1.01] active:scale-[0.99] transition-all duration-200",
+                    "shadow-lg shadow-primary/20",
+                    "disabled:opacity-50 disabled:pointer-events-none"
+                  )}
                 >
                   {loading ? (
                     <>
@@ -344,11 +372,13 @@ export default function CheckoutClient() {
                     </>
                   ) : (
                     <>
+                      <Lock className="w-4 h-4 mr-2" />
                       Pay {selectedCountry === 'US' 
                         ? planInfo.priceUSD.replace('USD ', '$') 
                         : planInfo.priceIDR}
                     </>
                   )}
+                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:animate-shimmer" />
                 </Button>
               </div>
             </CardFooter>
