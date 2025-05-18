@@ -97,7 +97,7 @@ export function ImagePromptInput({ onSubmit, isEditing, isLoading }: ImagePrompt
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-2 bg-muted/40 px-2.5 py-1 rounded-full">
                   <Progress 
-                    value={(prompt.length / 500) * 100} 
+                    value={(prompt.length / 5000) * 100} 
                     className="w-[50px] sm:w-[60px] h-1.5" 
                   />
                   <span className="text-xs font-medium">{prompt.length}/500</span>
